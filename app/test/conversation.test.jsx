@@ -124,6 +124,7 @@ beforeEach(() => {
   Object.defineProperty(HTMLMediaElement.prototype, 'play', { configurable: true, value: vi.fn(() => Promise.resolve()) })
   Object.defineProperty(HTMLMediaElement.prototype, 'pause', { configurable: true, value: vi.fn() })
   Object.defineProperty(HTMLElement.prototype, 'scrollTo', { configurable: true, value: vi.fn() })
+  Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', { configurable: true, value: vi.fn() })
 })
 
 afterEach(() => {
@@ -202,6 +203,19 @@ test('selecting an incident-ranked team updates the METHANE message', async () =
   })
 })
 
+test('sending the draft reveals teams and a map with the incident location', async () => {
+  render(<App />)
+  const socket = startVoiceCall()
+  await act(async () => socket.receive({ type: 'ready' }))
+  act(() => socket.receive({ type: 'final', text: 'A caller reports a fall on North Ridge.' }))
+
+  fireEvent.click(await screen.findByRole('button', { name: 'Send message ↓' }))
+
+  expect(screen.getByRole('heading', { name: 'Teams & locations' })).toBeVisible()
+  expect(screen.getByRole('heading', { name: 'Live response map' })).toBeVisible()
+  expect(screen.getByRole('img', { name: /incident at North Ridge/i })).toBeVisible()
+})
+
 test('an older analysis response cannot replace a newer transcript revision', async () => {
   const pending = []
   fetch.mockImplementation(async (url) => {
@@ -241,4 +255,26 @@ test('an older analysis response cannot replace a newer transcript revision', as
   })))
   expect(screen.getByText('Newest location.')).toBeVisible()
   expect(screen.queryByText('Stale location.')).not.toBeInTheDocument()
+})
+
+test('a newer transcript revision cancels the superseded analysis request', async () => {
+  const analysisSignals = []
+  fetch.mockImplementation(async (url, options = {}) => {
+    if (String(url).includes('/api/health')) {
+      return response({ aiConfigured: true, transcriptionConfigured: true })
+    }
+    if (String(url).includes('/api/teams')) return response({ teams })
+    analysisSignals.push(options.signal)
+    return new Promise(() => {})
+  })
+
+  render(<App />)
+  const socket = startVoiceCall()
+  await act(async () => socket.receive({ type: 'ready' }))
+  act(() => socket.receive({ type: 'final', text: 'A caller reports a fall on North Ridge.' }))
+  act(() => socket.receive({ type: 'final', text: 'The casualty is conscious and talking.' }))
+
+  expect(analysisSignals).toHaveLength(2)
+  expect(analysisSignals[0].aborted).toBe(true)
+  expect(analysisSignals[1].aborted).toBe(false)
 })

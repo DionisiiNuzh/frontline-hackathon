@@ -24,10 +24,15 @@ app.post('/api/analyse', async (req, res) => {
   const transcript = typeof req.body?.transcript === 'string' ? req.body.transcript.trim() : ''
   if (transcript.length < 20) return res.status(400).json({ error: 'Add a transcript of at least 20 characters.' })
   if (transcript.length > 20000) return res.status(400).json({ error: 'Transcript is too long for this trial.' })
+  const controller = new AbortController()
+  res.on('close', () => {
+    if (!res.writableEnded) controller.abort()
+  })
   try {
-    const incident = await analyseTranscript(transcript)
+    const incident = await analyseTranscript(transcript, { signal: controller.signal })
     res.json({ incident, matches: matchTeams(incident, teams) })
   } catch (error) {
+    if (controller.signal.aborted) return
     console.error(error)
     res.status(502).json({ error: error.message || 'Analysis failed.' })
   }

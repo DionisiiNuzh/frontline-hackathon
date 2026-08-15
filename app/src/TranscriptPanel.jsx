@@ -11,7 +11,6 @@ function TranscriptPanel({
   onChooseAudio,
   onFinishCall,
   onStartCall,
-  questions,
   transcript,
 }) {
   const transcriptPanelRef = useRef(null)
@@ -53,13 +52,6 @@ function TranscriptPanel({
         : <span>Finalized speech will appear here while the recording plays.</span>}
       {interim && <div className="transcript-segment interim"><small>••</small><p>{interim}</p></div>}
     </div>
-    {questions.length > 0 && <div className="questions transcript-questions">
-      <h3>Ask next</h3>
-      {questions.map((question, index) => <div className="question" key={question}>
-        <b>{String(index + 1).padStart(2, '0')}</b>
-        <span>{question}</span>
-      </div>)}
-    </div>}
     <div className="transcript-foot">
       <span>{loading ? 'Updating incident picture…' : `${transcript.length} characters · transcript is not stored`}</span>
       {callInProgress

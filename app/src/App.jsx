@@ -3,6 +3,13 @@ import TranscriptPanel from "./TranscriptPanel.jsx";
 
 const icons = { confirmed: "✓", uncertain: "~", unknown: "?" };
 const statusOrder = { available: 0, standby: 1, tasked: 2 };
+const teamPositions = {
+  "ridge-1": [43, 22], "valley-3": [65, 42], "swift-water-2": [77, 69],
+  "air-support": [52, 48], "forest-4": [22, 47], "harbor-5": [88, 76],
+  "cave-6": [45, 84], "urban-7": [69, 57], "summit-8": [31, 15],
+  "trail-9": [55, 66], "delta-10": [64, 85], "peak-11": [18, 30],
+  "night-12": [61, 29], "storm-13": [36, 55], "quarry-14": [79, 48],
+};
 const incidentPictureFieldOrder = [
   "incidentType",
   "exactLocation",
@@ -55,11 +62,14 @@ function App() {
   const [audioName, setAudioName] = useState("");
   const [interim, setInterim] = useState("");
   const [callStatus, setCallStatus] = useState("ready");
+  const [dispatchSent, setDispatchSent] = useState(false);
   const audioRef = useRef(null);
   const socketRef = useRef(null);
   const recorderRef = useRef(null);
   const transcriptRef = useRef("");
   const revisionRef = useRef(0);
+  const analysisControllerRef = useRef(null);
+  const responseRef = useRef(null);
 
   useEffect(() => {
     fetch("/api/health")
@@ -75,7 +85,10 @@ function App() {
       .then(({ teams = [] }) => setTeamPool(sortRoster(teams)))
       .catch(() => setTeamPool([]));
 
-    return () => socketRef.current?.close();
+    return () => {
+      socketRef.current?.close();
+      analysisControllerRef.current?.abort();
+    };
   }, []);
 
   useEffect(() => {
@@ -87,6 +100,9 @@ function App() {
   async function analyse(nextTranscript, revision) {
     if (nextTranscript.trim().length < 20) return;
 
+    analysisControllerRef.current?.abort();
+    const controller = new AbortController();
+    analysisControllerRef.current = controller;
     setLoading(true);
     setError("");
     try {
@@ -94,6 +110,7 @@ function App() {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ transcript: nextTranscript }),
+        signal: controller.signal,
       });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error || "Analysis failed");
@@ -104,13 +121,20 @@ function App() {
         current && body.matches.some((team) => team.id === current) ? current : null,
       );
     } catch (err) {
-      if (revision === revisionRef.current) setError(err.message);
+      if (err.name !== "AbortError" && revision === revisionRef.current) {
+        setError(err.message);
+      }
     } finally {
+      if (analysisControllerRef.current === controller) {
+        analysisControllerRef.current = null;
+      }
       if (revision === revisionRef.current) setLoading(false);
     }
   }
 
   function resetIncident(reason, fileName) {
+    analysisControllerRef.current?.abort();
+    analysisControllerRef.current = null;
     revisionRef.current += 1;
     transcriptRef.current = "";
     setTranscript("");
@@ -119,6 +143,7 @@ function App() {
     setSelected(null);
     setExpandedTeamId(null);
     setShowAllTeams(false);
+    setDispatchSent(false);
     setLoading(false);
     setError("");
     console.info("[transcript] cleared", { reason, file: fileName });
@@ -234,6 +259,12 @@ function App() {
     setCallStatus("finishing");
   }
 
+  function sendDispatch() {
+    if (!result) return;
+    setDispatchSent(true);
+    window.setTimeout(() => responseRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+  }
+
   const hasAnalysis = Boolean(result);
   const rankedTeams = result?.matches ?? teamPool;
   const visibleTeams = showAllTeams ? rankedTeams : rankedTeams.slice(0, 5);
@@ -287,7 +318,7 @@ function App() {
           </div>
         </section>
 
-        <div className="layout">
+        <div className="primary-layout">
           <TranscriptPanel
             audioName={audioName}
             audioRef={audioRef}
@@ -299,7 +330,6 @@ function App() {
             onChooseAudio={chooseAudio}
             onFinishCall={finishCall}
             onStartCall={startCall}
-            questions={nextQuestions}
             transcript={transcript}
           />
 
@@ -327,6 +357,13 @@ function App() {
               />
             ) : (
               <div className="picture-stack">
+                <section className="ask-next" aria-label="Ask next">
+                  <div className="ask-next-label"><span>ASK NEXT</span><small>Recommended caller prompt</small></div>
+                  <p>{nextQuestions[0] || "Confirm the caller’s exact location and current condition."}</p>
+                  {nextQuestions.length > 1 && <div className="question-alternates">
+                    {nextQuestions.slice(1).map((question) => <span key={question}>{question}</span>)}
+                  </div>}
+                </section>
                 <section className="picture-block">
                   <div className="facts">
                     {incidentPictureFields.map((field) => (
@@ -357,12 +394,22 @@ function App() {
                         ? `${selectedTeam.name} · ${selectedTeam.contact}`
                         : "No rescue team selected yet"}
                     </span>
+                    <button type="button" className="send-button" onClick={sendDispatch}>
+                      Send message ↓
+                    </button>
                   </div>
                 </section>
               </div>
             )}
           </section>
+        </div>
 
+        <section className={`response-workspace ${dispatchSent ? "revealed" : ""}`} ref={responseRef}>
+          <div className="section-intro">
+            <div><p className="eyebrow">RESPONSE COORDINATION</p><h2>Teams & locations</h2></div>
+            <span>Dispatch draft sent for review · No team automatically tasked</span>
+          </div>
+          <div className="response-layout">
           <aside className="panel teams-panel">
             <div className="panel-head">
               <div>
@@ -477,7 +524,9 @@ function App() {
               </div>
             )}
           </aside>
-        </div>
+          {dispatchSent && <MapPanel teams={rankedTeams} incident={result?.incident} selected={selected} />}
+          </div>
+        </section>
       </main>
 
       <footer>
@@ -489,6 +538,37 @@ function App() {
       </footer>
     </div>
   );
+}
+
+function MapPanel({ teams, incident, selected }) {
+  const location = getField(incident?.fields, "exactLocation")?.value || "Incident location";
+  return <section className="panel map-panel">
+    <div className="panel-head">
+      <div><span className="step">04</span><h2>Live response map</h2></div>
+      <span className="badge live">ALL UNITS</span>
+    </div>
+    <div className="map-canvas" role="img" aria-label={`Map of rescue teams and incident at ${location}`}>
+      <svg className="terrain" viewBox="0 0 800 520" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M-20 355 C120 260 180 430 320 310 S550 205 820 320" />
+        <path d="M-10 120 C180 30 260 210 410 105 S650 30 840 125" />
+        <path d="M190 -20 C130 150 260 215 190 555" />
+        <path d="M590 -20 C530 155 690 260 620 555" />
+      </svg>
+      <span className="map-label north">NORTH RIDGE</span><span className="map-label valley">EAST VALLEY</span>
+      <span className="map-label forest">WEST FOREST</span><span className="map-label coast">COASTAL BELT</span>
+      {teams.map((team, index) => {
+        const [x, y] = teamPositions[team.id] || [20 + (index * 13) % 65, 18 + (index * 19) % 68];
+        return <button type="button" className={`map-marker team-marker ${team.status} ${selected === team.id ? "selected" : ""}`}
+          style={{ left: `${x}%`, top: `${y}%` }} title={`${team.name} · ${team.etaMinutes} min ETA`} key={team.id}>
+          <i /> <span>{team.name}</span>
+        </button>;
+      })}
+      <div className="incident-marker" style={{ left: "46%", top: "28%" }}>
+        <i><span /></i><div><b>INCIDENT</b><strong>{location}</strong></div>
+      </div>
+      <div className="map-legend"><span><i className="incident-dot" /> Incident</span><span><i className="available-dot" /> Available</span><span><i className="standby-dot" /> Standby</span><span><i className="tasked-dot" /> Tasked</span></div>
+    </div>
+  </section>;
 }
 
 function Empty({ text, compact = false }) {

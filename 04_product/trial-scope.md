@@ -11,6 +11,7 @@ Test whether a single dispatcher view can reduce the effort needed to turn a cal
 3. The assistant extracts a METHANE-style incident record, separates confirmed facts from uncertainty, and suggests the next questions.
 4. The product ranks seeded rescue teams using visible capability and availability rules.
 5. The dispatcher reviews the result and may select a team, which completes the draft METHANE dispatch message; the product does not dispatch it.
+6. Sending the review-only draft reveals response coordination: ranked teams alongside a schematic view of all seeded team locations and the highlighted incident.
 
 ## In scope
 
@@ -22,10 +23,11 @@ Test whether a single dispatcher view can reduce the effort needed to turn a cal
 - Explainable, deterministic team suitability ranking.
 - Seeded team roster and a review-only selection action.
 - A selection-aware METHANE message that remains a reviewable draft.
+- A review-stage schematic map using seeded, non-live team positions and the extracted incident location.
 
 ## Out of scope
 
-- Microphone capture, telephony, maps, authentication, persistence, team tracking, and real dispatch.
+- Microphone capture, telephony, external/live maps, authentication, persistence, live team tracking, and real dispatch.
 - Medical or operational advice.
 
 ## Trial success criteria

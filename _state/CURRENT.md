@@ -6,7 +6,7 @@ The transcript UI is isolated in `app/src/TranscriptPanel.jsx`, starts empty, re
 
 A direct Deepgram run with the 14-second `trial1_q1.m4a` established the earlier root cause: Deepgram returned three non-empty `is_final` segments, while only the third had `speech_final: true`. The bridge had buffered until `speech_final` and therefore collapsed all three into one row. It now emits each final segment immediately using `{ type: "final", text }`. The event semantics and rationale are authoritative in `05_architecture/trial-architecture.md`.
 
-The interface uses the three-column dispatcher layout from `main`. It loads the expanded rescue-team roster before analysis, switches to deterministic incident-fit ranking after analysis, and allows a ranked team to be selected for review. The incident picture separates current facts from a generated METHANE dispatch message, whose emergency-services line updates from the selected team. No external dispatch occurs.
+The interface now uses a staged two-column dispatcher layout. The active-call stage places the transcript left and incident picture right, with the recommended “Ask next” prompt promoted to the largest, high-contrast content in the workspace. Sending the review-only message reveals and smoothly scrolls to a response stage with ranked teams left and an operational schematic right showing all seeded team positions plus a highlighted incident location. The schematic is not live tracking and no external dispatch occurs.
 
 The automated server/UI tests and Vite production build pass. Both credentials remain server-side and were not exposed.
 

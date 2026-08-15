@@ -154,7 +154,7 @@ main {
 }
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(300px, 360px);
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(280px, 320px);
   gap: 16px;
   margin-bottom: 16px;
 }
@@ -521,7 +521,7 @@ button:disabled {
   box-shadow: 0 0 9px var(--lime);
 }
 .teams-panel {
-  max-width: 360px;
+  max-width: 320px;
 }
 .teams-panel .panel-head {
   height: 68px;
@@ -562,7 +562,6 @@ button:disabled {
     0 0 0 1px #5d7431,
     0 10px 18px #00000052;
 }
-.team.selected .rank,
 .team.selected .score strong {
   color: #e1ff8f;
 }
@@ -578,11 +577,6 @@ button:disabled {
   gap: 7px;
   flex: 1;
   min-width: 0;
-}
-.rank {
-  color: #63706a;
-  margin-top: 1px;
-  display: inline-block;
 }
 .team-title-row {
   display: flex;

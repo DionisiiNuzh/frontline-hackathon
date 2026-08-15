@@ -155,9 +155,10 @@ test('shows the roster before analysis and expands from the top five', async () 
   render(<App />)
 
   expect(await screen.findByRole('heading', { name: 'Available teams' })).toBeVisible()
-  expect(screen.getByText('Valley 3')).toBeVisible()
+  expect(await screen.findByText('Valley 3')).toBeVisible()
   expect(screen.queryByText('Cave 6')).not.toBeInTheDocument()
   expect(screen.queryByText('FIT')).not.toBeInTheDocument()
+  expect(screen.queryByText('MIN')).not.toBeInTheDocument()
 
   fireEvent.click(screen.getByRole('button', { name: 'View all teams' }))
   expect(screen.getByText('Cave 6')).toBeVisible()

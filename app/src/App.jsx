@@ -68,7 +68,7 @@ function App() {
         setConfigured(health.aiConfigured);
         setTranscriptionConfigured(health.transcriptionConfigured);
       })
-      .catch(() => {});
+      .catch(() => { });
 
     fetch("/api/teams")
       .then((response) => response.json())
@@ -369,15 +369,12 @@ function App() {
                 <span className="step">03</span>
                 <h2>{hasAnalysis ? "Suitable teams" : "Available teams"}</h2>
               </div>
-              <span className="muted">
-                {hasAnalysis ? "Ranked by incident fit" : "Availability & ETA"}
-              </span>
             </div>
             {!rankedTeams.length ? (
               <Empty text="Loading the rescue-team roster…" compact />
             ) : (
               <div className="team-list">
-                {visibleTeams.map((team, index) => {
+                {visibleTeams.map((team) => {
                   const reasons = team.reasons ?? [];
                   const limits = team.limits ?? [];
                   const isExpanded = expandedTeamId === team.id;
@@ -390,9 +387,6 @@ function App() {
                     >
                       <div className="team-summary">
                         <div className="team-name-block">
-                          <span className="rank">
-                            {String(index + 1).padStart(2, "0")}
-                          </span>
                           <div>
                             <div className="team-title-row">
                               <h3>{team.name}</h3>
@@ -413,10 +407,12 @@ function App() {
                             </p>
                           </div>
                         </div>
-                        <div className="score">
-                          <strong>{hasAnalysis ? team.score : team.etaMinutes}</strong>
-                          <small>{hasAnalysis ? "FIT" : "MIN"}</small>
-                        </div>
+                        {hasAnalysis && (
+                          <div className="score">
+                            <strong>{team.score}</strong>
+                            <small>FIT</small>
+                          </div>
+                        )}
                       </div>
 
                       <div className="team-status-row">
@@ -432,7 +428,7 @@ function App() {
                             {isSelected ? "Selected ✓" : "Select team"}
                           </button>
                         )}
-                        <strong>{team.etaMinutes} min</strong>
+                        <strong>ETA: {team.etaMinutes}min</strong>
                       </div>
 
                       <div className={`team-details ${isExpanded ? "expanded" : ""}`}>

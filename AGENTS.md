@@ -12,8 +12,7 @@ Folders carry context and sequencing. Files carry knowledge and state. Read only
 | `_context/`        | Hackathon, team, judging, and constraints         |
 | `_research/`       | Research process, raw evidence, and findings      |
 | `_state/`          | Current project state and handoffs                |
-| `01_idea/`         | Idea exploration and selected concept             |
-| `02_problem/`      | Problem, stakeholders, workflows, pain points     |
+| `01_idea/`         | Problem statement, idea, and selected concept     |
 | `03_knowledge/`    | Canonical knowledge about users and the domain    |
 | `04_product/`      | Product scope, requirements, features, user flows |
 | `05_architecture/` | Technical design and decisions                    |
@@ -25,15 +24,17 @@ Folders carry context and sequencing. Files carry knowledge and state. Read only
 
 If the task concerns:
 
-* the idea → `01_idea/CONTEXT.md`
-* the problem or current user workflow → `02_problem/CONTEXT.md`
-* known user/domain facts, practices, rules, or guidelines → `03_knowledge/CONTEXT.md`
+* hackathon rules, judging, team, or constraints → `_context/CONTEXT.md`
+* the problem statement, idea, or selected concept → `01_idea/CONTEXT.md`
+* known user/domain facts, current workflows, practices, rules, or guidelines → `03_knowledge/CONTEXT.md`
 * missing or uncertain information → `_research/CONTEXT.md`
 * what we should build → `04_product/CONTEXT.md`
 * how it should be built → `05_architecture/CONTEXT.md`
 * implementation → `06_build/CONTEXT.md`
 * demo or judging → `07_demo/CONTEXT.md`
-* current progress or resuming work → `_state/CURRENT.md`
+* current progress or resuming work → `_state/CONTEXT.md`
+
+For workspace-wide routing, use this `AGENTS.md`.
 
 ## Rules
 

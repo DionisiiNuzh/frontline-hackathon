@@ -1,7 +1,11 @@
 # Current state
 
-The first text trial and the minimal voice-to-summary implementation are in `app/`. A browser-selected recording is played in real time, captured as timed media chunks, bridged server-side to Deepgram, shown as interim/finalized transcript, and automatically handed to the existing Claude incident analysis after completed utterances. Transcript revisions reject stale Claude results.
+The text trial and minimal voice-to-summary implementation are in `app/`. Browser-selected audio is played in real time, captured as timed media chunks, bridged server-side to Deepgram, displayed as temporary interim text plus append-only finalized segments, and handed cumulatively to Claude after every finalized segment. Transcript revisions reject stale Claude results.
 
-The minimal voice path passed its first external end-to-end run using the 14-second `trial1_q1.m4a`: headless Chromium played and captured the audio in real time, Deepgram returned one finalized utterance, the cumulative transcript was sent automatically to Claude, and the incident summary appeared in the browser. Both credentials were detected without being exposed. A normalization guard and test handle the observed case where Claude returns structured fields but omits its required summary property. The app builds and both tests pass.
+The transcript UI is now isolated in `app/src/TranscriptPanel.jsx`, starts empty, renders finalized segments as numbered rows, and follows rapid live updates by scrolling immediately after layout. Focused `[transcription]` and `[transcript]` logs expose Deepgram/browser events, deliberate resets, cumulative append state, rendered segment counts, and scroll position.
 
-Next: run a clip with clear pauses that produces at least two finalized utterances and verify multiple automatic summary revisions during playback. The standalone recording script is in `06_build/incident-call-script.md`.
+A direct Deepgram run with the 14-second `trial1_q1.m4a` established the earlier root cause: Deepgram returned three non-empty `is_final` segments, while only the third had `speech_final: true`. The bridge had buffered until `speech_final` and therefore collapsed all three into one row. It now emits each final segment immediately using `{ type: "final", text }`. The event semantics and rationale are authoritative in `05_architecture/trial-architecture.md`.
+
+The UI regression test confirms three final events remain as three visible rows. All server/UI tests pass and the Vite production build succeeds. Both credentials remain server-side and were not exposed.
+
+Next: run `trial1_q1.m4a` through the interactive application and confirm the three rows remain visible during playback and drive cumulative summary revisions. If using `npm start`, restart the server first; `npm run dev` should reload automatically.

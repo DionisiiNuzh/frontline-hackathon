@@ -91,7 +91,10 @@ transcriptionServer.on('connection', (browser) => {
     send({ type: 'interim', text, isFinal: Boolean(event.is_final) })
     if (event.is_final) send({ type: 'final', text })
   })
-  deepgram.on('error', (error) => send({ type: 'error', message: error.message || 'Transcription failed.' }))
+  deepgram.on('error', (error) => {
+    console.error('[transcription] Deepgram error', error)
+    send({ type: 'error', message: error.message || 'Transcription failed.' })
+  })
   deepgram.on('close', (code) => {
     console.info('[transcription] Deepgram closed', { code })
     send({ type: 'closed', code })

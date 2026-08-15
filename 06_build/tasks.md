@@ -33,7 +33,7 @@ Play one fictional incident recording in real time, stream the audio as it plays
 - [x] **Codex:** Add a server-side WebSocket bridge so the Deepgram credential never reaches the browser.
 - [x] **Codex:** Add an in-app audio player that sends small audio chunks while playback advances, rather than uploading the completed recording for retrospective transcription.
 - [x] **Codex:** Display interim transcription separately from committed finalized transcript segments.
-- [x] **Codex:** Send only finalized transcript text to the existing Claude incident-analysis path after completed utterances.
+- [x] **Codex:** Send each `is_final` transcript segment to the existing Claude incident-analysis path immediately, while keeping interim text display-only.
 - [x] **Codex:** Prevent an older Claude response from replacing a summary generated from a newer transcript revision.
 - [x] **Codex:** Keep the last completed incident summary visible while the next summary is being generated.
 - [x] **Codex:** Add clear ready, playing, transcribing, analysing, complete, and error states.
@@ -52,4 +52,10 @@ Play one fictional incident recording in real time, stream the audio as it plays
 - [x] Deepgram returned a finalized transcript through the server-side bridge.
 - [x] The finalized cumulative transcript was handed automatically to Claude.
 - [x] The resulting incident summary appeared in the browser without an Analyse action.
-- [ ] Validate multiple automatic summary revisions with a clip containing clear pauses between two or more utterances.
+- [x] A direct Deepgram diagnostic with `trial1_q1.m4a` returned three non-empty `is_final` segments but only one `speech_final` boundary, exposing that the bridge incorrectly collapsed the three segments into one UI item.
+- [x] Change the bridge to emit each `is_final` segment immediately as `{ type: "final", text }` and retain every prior segment in the cumulative transcript.
+- [x] Extract transcript presentation and follow-to-bottom behavior from `App.jsx` into `TranscriptPanel.jsx`; start with an empty transcript and use immediate post-layout scrolling.
+- [x] Add a UI regression test proving that three final events leave three visible transcript rows.
+- [x] Add focused browser/server transcript event diagnostics without credentials or broad application logging.
+- [x] Run the full server/UI test suite and production build after the transcript fix.
+- [ ] User-run verification: play `trial1_q1.m4a` through the application and confirm its three finalized segments remain visible and trigger cumulative summary revisions.

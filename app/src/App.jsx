@@ -4,6 +4,38 @@ const sample = `Caller: We're on North Ridge, close to the old quarry path. My f
 
 const icons = { confirmed: "✓", uncertain: "~", unknown: "?" };
 
+function getField(fields, key) {
+  return fields?.find((field) => field.key === key);
+}
+
+function buildMethaneMessage(incident, team) {
+  if (!incident) return "";
+
+  const location =
+    getField(incident.fields, "exactLocation")?.value || "Not established";
+  const incidentType =
+    getField(incident.fields, "incidentType")?.value || "Not established";
+  const hazards =
+    getField(incident.fields, "hazards")?.value || "Not established";
+  const access =
+    getField(incident.fields, "access")?.value || "Not established";
+  const casualties =
+    getField(incident.fields, "casualties")?.value || "Not established";
+  const services =
+    getField(incident.fields, "services")?.value || "Not established";
+
+  return [
+    "M - Major incident: " +
+      (getField(incident.fields, "majorIncident")?.value || "Not established"),
+    `E - Exact location: ${location}`,
+    `T - Type of incident: ${incidentType}`,
+    `H - Hazards: ${hazards}`,
+    `A - Access: ${access}`,
+    `N - Number of casualties: ${casualties}`,
+    `E - Emergency services: ${team ? `${team.name} selected · ${team.etaMinutes} min ETA · Contact ${team.contact}` : services}`,
+  ].join("\n");
+}
+
 function rankTeam(team) {
   const availability =
     team.status === "available" ? 30 : team.status === "standby" ? 18 : 0;
@@ -64,6 +96,11 @@ function App() {
   const visibleTeams = showAllTeams ? rankedTeams : rankedTeams.slice(0, 5);
   const hasMoreTeams = rankedTeams.length > 5;
   const nextQuestions = result?.incident?.suggestedQuestions?.slice(0, 3) ?? [];
+  const selectedTeam = rankedTeams.find((team, index) => {
+    const teamKey = team.id ?? `${team.name}-${index}`;
+    return teamKey === selected;
+  });
+  const methaneMessage = buildMethaneMessage(result?.incident, selectedTeam);
 
   return (
     <div className="shell">
@@ -138,33 +175,47 @@ function App() {
                 <span className="step">02</span>
                 <h2>Incident picture</h2>
               </div>
-              {result && (
-                <span className={`badge ${result.incident.mode}`}>
-                  {result.incident.mode === "live"
-                    ? "CLAUDE DRAFT"
-                    : "LOCAL DEMO DRAFT"}
-                </span>
-              )}
             </div>
             {!result ? (
               <Empty text="Analyse the call to build a structured incident picture." />
             ) : (
-              <>
-                <p className="summary">{result.incident.summary}</p>
-                <div className="facts">
-                  {result.incident.fields.map((field) => (
-                    <div className="fact" key={field.key}>
-                      <span className={`confidence ${field.confidence}`}>
-                        {icons[field.confidence]}
-                      </span>
-                      <div>
-                        <small>{field.label}</small>
-                        <strong>{field.value}</strong>
+              <div className="picture-stack">
+                <section className="picture-block">
+                  <p className="summary">{result.incident.summary}</p>
+                  <div className="facts">
+                    {result.incident.fields.map((field) => (
+                      <div className="fact" key={field.key}>
+                        <span className={`confidence ${field.confidence}`}>
+                          {icons[field.confidence]}
+                        </span>
+                        <div>
+                          <small>{field.label}</small>
+                          <strong>{field.value}</strong>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </>
+                    ))}
+                  </div>
+                </section>
+
+                <section className="picture-block dispatch-block">
+                  <div className="picture-block-head">
+                    <h3>Dispatch message</h3>
+                    <span
+                      className={`badge ${selectedTeam ? "live" : "neutral"}`}
+                    >
+                      {selectedTeam ? "READY TO SEND" : "SELECT TEAM"}
+                    </span>
+                  </div>
+                  <pre className="dispatch-message">{methaneMessage}</pre>
+                  <div className="dispatch-footer">
+                    <span>
+                      {selectedTeam
+                        ? `${selectedTeam.name} · ${selectedTeam.contact}`
+                        : "No rescue team selected yet"}
+                    </span>
+                  </div>
+                </section>
+              </div>
             )}
           </section>
 

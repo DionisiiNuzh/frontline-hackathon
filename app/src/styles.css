@@ -179,6 +179,10 @@ main {
   border-color: #8c6c38;
   color: #e1ad5a;
 }
+.badge.neutral {
+  border-color: #3a4540;
+  color: #9ba7a1;
+}
 .muted {
   font-size: 11px;
   color: var(--muted);
@@ -252,10 +256,64 @@ button:disabled {
 .picture-panel {
   min-height: 566px;
 }
+.picture-stack {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+.picture-block {
+  min-width: 0;
+}
+.picture-block + .picture-block {
+  border-top: 1px solid var(--line);
+}
+.picture-block-head {
+  min-height: 64px;
+  padding: 0 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.picture-block-head h3 {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.2;
+}
+.dispatch-block {
+  background: linear-gradient(180deg, #141c18, #101613);
+}
+.dispatch-intro {
+  margin: 0 22px 12px;
+  color: #b8c3bd;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.dispatch-message {
+  margin: 0;
+  padding: 16px 22px 18px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: #0f1512;
+  color: #e6efe9;
+  font: 500 12px/1.7 "IBM Plex Mono";
+  white-space: pre-wrap;
+}
+.dispatch-footer {
+  min-height: 52px;
+  padding: 0 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 10px;
+}
+.dispatch-footer span {
+  line-height: 1.4;
+}
 .summary {
   font-size: 15px;
   line-height: 1.55;
-  margin: 20px 22px;
+  margin: 0 22px 0;
   color: #d8dfda;
 }
 .facts {
@@ -272,9 +330,12 @@ button:disabled {
 .confidence {
   width: 22px;
   height: 22px;
+  flex: 0 0 22px;
+  aspect-ratio: 1 / 1;
   display: grid;
   place-items: center;
   border-radius: 50%;
+  line-height: 1;
   font: 600 10px "IBM Plex Mono";
 }
 .confidence.confirmed {
@@ -721,6 +782,19 @@ footer p {
   }
   .panel-head {
     padding: 0 16px;
+  }
+  .picture-block-head,
+  .dispatch-intro,
+  .dispatch-message,
+  .dispatch-footer,
+  .summary,
+  .fact {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .picture-block-head,
+  .dispatch-footer {
+    min-height: 58px;
   }
   .muted {
     display: none;

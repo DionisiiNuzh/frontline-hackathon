@@ -9,5 +9,6 @@ This application is purely an operational tool, not a marketing website. Interfa
 - [x] Implement transcript extraction with safe local fallback.
 - [x] Implement explainable deterministic team matching.
 - [x] Add a dispatcher-focused review interface.
+- [x] Split the incident picture into facts and a METHANE dispatch message.
 - [ ] Validate a live request with the user's Anthropic API key.
 - [ ] Run the prepared scenario with a dispatcher/domain reviewer.

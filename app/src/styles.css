@@ -384,9 +384,9 @@ button:disabled {
   position: relative;
   padding: 26px 28px 30px;
   overflow: hidden;
-  color: #17201b;
-  background: linear-gradient(135deg, #b8c4bc, #aab8af 68%, #c0cac3);
-  border-bottom: 1px solid #7f8f85;
+  color: #edf2ee;
+  background: linear-gradient(135deg, #18211d, #111815 68%, #1b2520);
+  border-bottom: 1px solid #34423b;
 }
 .ask-next:after {
   content: "";
@@ -396,7 +396,7 @@ button:disabled {
   width: 22%;
   pointer-events: none;
   opacity: 0;
-  background: linear-gradient(90deg, transparent, #ffffff70, transparent);
+  background: linear-gradient(90deg, transparent, #b9cbbf24, transparent);
   transform: skewX(-14deg);
   animation: informationSweep 1.05s ease-out .15s 1;
 }
@@ -415,10 +415,10 @@ button:disabled {
 .ask-next-label span {
   font: 700 11px "IBM Plex Mono";
   letter-spacing: .16em;
-  color: #24312a;
+  color: #cbd5cf;
 }
 .ask-next-label small {
-  color: #506158;
+  color: #829188;
   font-size: 10px;
 }
 .question-grid {
@@ -432,24 +432,24 @@ button:disabled {
 .next-question {
   min-height: 96px;
   padding: 13px 14px;
-  border: 1px solid #8b9a91;
-  background: #e7ece8;
+  border: 1px solid #405047;
+  background: #222d27;
 }
 .next-question.primary {
   grid-column: 1 / -1;
   min-height: 138px;
   padding: 18px 20px;
-  border-color: #8a9990;
-  background: linear-gradient(120deg, #f4f7f5, #e8eeea);
-  box-shadow: 0 8px 22px #3140371c;
+  border-color: #4b5d53;
+  background: linear-gradient(120deg, #29362f, #232f29);
+  box-shadow: 0 8px 22px #00000024;
 }
 .next-question b {
   font: 700 9px "IBM Plex Mono";
-  color: #617168;
+  color: #91a198;
 }
 .next-question p {
   margin: 12px 0 0;
-  color: #2c3932;
+  color: #c8d2cc;
   font-size: clamp(14px, 1.1vw, 17px);
   font-weight: 600;
   line-height: 1.18;
@@ -457,7 +457,7 @@ button:disabled {
 }
 .next-question.primary p {
   max-width: 590px;
-  color: #17211b;
+  color: #f0f4f1;
   font-size: clamp(23px, 2.1vw, 32px);
   line-height: 1.12;
 }

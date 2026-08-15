@@ -3,6 +3,14 @@ import TranscriptPanel from "./TranscriptPanel.jsx";
 
 const icons = { confirmed: "✓", uncertain: "~", unknown: "?" };
 const statusOrder = { available: 0, standby: 1, tasked: 2 };
+const incidentPictureFieldOrder = [
+  "incidentType",
+  "exactLocation",
+  "hazards",
+  "access",
+  "casualties",
+  "services",
+];
 
 function getField(fields, key) {
   return fields?.find((field) => field.key === key);
@@ -233,6 +241,9 @@ function App() {
   const nextQuestions = result?.incident?.suggestedQuestions?.slice(0, 3) ?? [];
   const selectedTeam = result?.matches?.find((team) => team.id === selected);
   const methaneMessage = buildMethaneMessage(result?.incident, selectedTeam);
+  const incidentPictureFields = incidentPictureFieldOrder
+    .map((key) => getField(result?.incident?.fields, key))
+    .filter(Boolean);
   const pipelineReady = configured && transcriptionConfigured;
   const statusText = pipelineReady
     ? "Voice pipeline connected"
@@ -317,9 +328,8 @@ function App() {
             ) : (
               <div className="picture-stack">
                 <section className="picture-block">
-                  <p className="summary">{result.incident.summary}</p>
                   <div className="facts">
-                    {result.incident.fields.map((field) => (
+                    {incidentPictureFields.map((field) => (
                       <div className="fact" key={field.key}>
                         <span className={`confidence ${field.confidence}`}>
                           {icons[field.confidence]}

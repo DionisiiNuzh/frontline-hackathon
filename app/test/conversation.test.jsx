@@ -187,6 +187,9 @@ test('selecting an incident-ranked team updates the METHANE message', async () =
   act(() => socket.receive({ type: 'final', text: 'A caller reports a fall on North Ridge.' }))
 
   expect(await screen.findByRole('heading', { name: 'Suitable teams' })).toBeVisible()
+  expect(screen.queryByText(incident.summary)).not.toBeInTheDocument()
+  expect(document.querySelector('.facts .fact small')).toHaveTextContent('Type')
+  expect(screen.queryByText('Major incident')).not.toBeInTheDocument()
   fireEvent.click(screen.getAllByRole('button', { name: 'Select team' })[0])
 
   expect(screen.getByText(/E - Emergency services: Ridge 1 selected/)).toBeVisible()
@@ -217,14 +220,24 @@ test('an older analysis response cannot replace a newer transcript revision', as
 
   await act(async () => pending[1](response({
     ...analysis,
-    incident: { ...incident, summary: 'Newest incident picture.' },
+    incident: {
+      ...incident,
+      fields: incident.fields.map((field) => field.key === 'exactLocation'
+        ? { ...field, value: 'Newest location.' }
+        : field),
+    },
   })))
-  expect(await screen.findByText('Newest incident picture.')).toBeVisible()
+  expect(await screen.findByText('Newest location.')).toBeVisible()
 
   await act(async () => pending[0](response({
     ...analysis,
-    incident: { ...incident, summary: 'Stale incident picture.' },
+    incident: {
+      ...incident,
+      fields: incident.fields.map((field) => field.key === 'exactLocation'
+        ? { ...field, value: 'Stale location.' }
+        : field),
+    },
   })))
-  expect(screen.getByText('Newest incident picture.')).toBeVisible()
-  expect(screen.queryByText('Stale incident picture.')).not.toBeInTheDocument()
+  expect(screen.getByText('Newest location.')).toBeVisible()
+  expect(screen.queryByText('Stale location.')).not.toBeInTheDocument()
 })

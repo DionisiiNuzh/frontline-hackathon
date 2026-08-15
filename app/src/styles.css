@@ -385,16 +385,6 @@ button:disabled {
 .dispatch-footer span {
   line-height: 1.4;
 }
-.summary {
-  font-size: 15px;
-  line-height: 1.55;
-  margin: 0 22px 0;
-  color: #d8dfda;
-}
-.picture-block .summary {
-  margin-top: 20px;
-  margin-bottom: 20px;
-}
 .facts {
   border-top: 1px solid var(--line);
 }
@@ -872,7 +862,6 @@ footer p {
   .dispatch-intro,
   .dispatch-message,
   .dispatch-footer,
-  .summary,
   .fact {
     padding-left: 16px;
     padding-right: 16px;

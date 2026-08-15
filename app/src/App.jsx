@@ -63,6 +63,7 @@ function App() {
   const rankedTeams = result?.matches ?? teamPool;
   const visibleTeams = showAllTeams ? rankedTeams : rankedTeams.slice(0, 5);
   const hasMoreTeams = rankedTeams.length > 5;
+  const nextQuestions = result?.incident?.suggestedQuestions?.slice(0, 3) ?? [];
 
   return (
     <div className="shell">
@@ -88,17 +89,6 @@ function App() {
       </header>
 
       <main>
-        <section className="intro">
-          <div>
-            <p className="eyebrow">INCIDENT WORKSPACE · DRAFT</p>
-          </div>
-          <div className="safety">
-            Decision support only
-            <br />
-            <span>No team is dispatched automatically</span>
-          </div>
-        </section>
-
         <div className="layout">
           <section className="panel transcript-panel">
             <div className="panel-head">
@@ -113,6 +103,17 @@ function App() {
               onChange={(e) => setTranscript(e.target.value)}
               aria-label="Caller transcript"
             />
+            {result && (
+              <div className="questions transcript-questions">
+                <h3>Ask next</h3>
+                {nextQuestions.map((q, i) => (
+                  <div className="question" key={q}>
+                    <b>{String(i + 1).padStart(2, "0")}</b>
+                    <span>{q}</span>
+                  </div>
+                ))}
+              </div>
+            )}
             <div className="transcript-foot">
               <span>
                 {transcript.length} characters · transcript is not stored
@@ -163,18 +164,6 @@ function App() {
                     </div>
                   ))}
                 </div>
-                <div className="questions">
-                  <h3>
-                    Ask next{" "}
-                    <span>{result.incident.suggestedQuestions.length}</span>
-                  </h3>
-                  {result.incident.suggestedQuestions.map((q, i) => (
-                    <div className="question" key={q}>
-                      <b>{String(i + 1).padStart(2, "0")}</b>
-                      <span>{q}</span>
-                    </div>
-                  ))}
-                </div>
               </>
             )}
           </section>
@@ -209,13 +198,14 @@ function App() {
                     (team.status === "tasked"
                       ? ["Currently assigned to another incident"]
                       : []);
-                  const isExpanded =
-                    expandedTeamId === (team.id ?? `${team.name}-${index}`);
+                  const teamKey = team.id ?? `${team.name}-${index}`;
+                  const isExpanded = expandedTeamId === teamKey;
+                  const isSelected = selected === teamKey;
 
                   return (
                     <article
-                      className={`team ${index === 0 ? "recommended" : ""} ${isExpanded ? "expanded" : ""}`}
-                      key={team.id ?? `${team.name}-${index}`}
+                      className={`team ${isSelected ? "selected" : ""} ${isExpanded ? "expanded" : ""}`}
+                      key={teamKey}
                     >
                       <div className="team-summary">
                         <div className="team-name-block">
@@ -223,20 +213,6 @@ function App() {
                           <div>
                             <div className="team-title-row">
                               <h3>{team.name}</h3>
-                              <button
-                                type="button"
-                                className="select-button"
-                                onClick={() =>
-                                  setSelected(
-                                    team.id ?? `${team.name}-${index}`,
-                                  )
-                                }
-                              >
-                                {selected ===
-                                (team.id ?? `${team.name}-${index}`)
-                                  ? "Selected ✓"
-                                  : "Select"}
-                              </button>
                               <button
                                 type="button"
                                 className="detail-toggle"
@@ -247,11 +223,7 @@ function App() {
                                 }
                                 aria-expanded={isExpanded}
                                 onClick={() =>
-                                  setExpandedTeamId(
-                                    isExpanded
-                                      ? null
-                                      : (team.id ?? `${team.name}-${index}`),
-                                  )
+                                  setExpandedTeamId(isExpanded ? null : teamKey)
                                 }
                               >
                                 <span className="detail-toggle-icon" />
@@ -272,6 +244,13 @@ function App() {
                         <span className={`availability ${team.status}`}>
                           {team.status}
                         </span>
+                        <button
+                          type="button"
+                          className="select-button"
+                          onClick={() => setSelected(teamKey)}
+                        >
+                          {isSelected ? "Selected ✓" : "Select team"}
+                        </button>
                         <strong>{team.etaMinutes} min</strong>
                       </div>
 

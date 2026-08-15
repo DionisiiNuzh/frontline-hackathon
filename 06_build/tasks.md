@@ -10,6 +10,7 @@ This application is purely an operational tool, not a marketing website. Interfa
 - [x] Implement explainable deterministic team matching.
 - [x] Add a dispatcher-focused review interface.
 - [x] Restructure the workspace into transcript/incident and teams/map stages with a dominant next-question prompt.
+- [x] Replace the schematic UK drawing with a dark Leaflet/CARTO basemap and deterministic seeded coordinates.
 - [x] Split the incident picture into facts and a METHANE dispatch message.
 - [ ] Validate a live request with the user's Anthropic API key.
 - [ ] Run the prepared scenario with a dispatcher/domain reviewer.

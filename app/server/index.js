@@ -119,4 +119,4 @@ transcriptionServer.on('connection', (browser) => {
   })
 })
 
-server.listen(port, () => console.log(`Northstar API listening on http://localhost:${port}`))
+server.listen(port, () => console.log(`Relai API listening on http://localhost:${port}`))

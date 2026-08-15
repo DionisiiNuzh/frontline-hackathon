@@ -2,6 +2,13 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-libra
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import App from '../src/App.jsx'
 
+const NativeURL = globalThis.URL
+
+class FakeURL extends NativeURL {
+  static createObjectURL = vi.fn(() => 'blob:incident-call')
+  static revokeObjectURL = vi.fn()
+}
+
 class FakeWebSocket {
   static OPEN = 1
   static instances = []
@@ -116,10 +123,9 @@ beforeEach(() => {
     if (String(url).includes('/api/teams')) return response({ teams })
     return response(analysis)
   }))
-  vi.stubGlobal('URL', {
-    createObjectURL: vi.fn(() => 'blob:incident-call'),
-    revokeObjectURL: vi.fn(),
-  })
+  FakeURL.createObjectURL.mockClear()
+  FakeURL.revokeObjectURL.mockClear()
+  vi.stubGlobal('URL', FakeURL)
   Object.defineProperty(HTMLMediaElement.prototype, 'captureStream', { configurable: true, value: vi.fn(() => ({})) })
   Object.defineProperty(HTMLMediaElement.prototype, 'play', { configurable: true, value: vi.fn(() => Promise.resolve()) })
   Object.defineProperty(HTMLMediaElement.prototype, 'pause', { configurable: true, value: vi.fn() })
@@ -212,8 +218,8 @@ test('sending the draft reveals teams and a map with the incident location', asy
   fireEvent.click(await screen.findByRole('button', { name: 'Send message ↓' }))
 
   expect(screen.getByRole('heading', { name: 'Teams & locations' })).toBeVisible()
-  expect(screen.getByRole('heading', { name: 'Live response map' })).toBeVisible()
-  expect(screen.getByRole('img', { name: /incident at North Ridge/i })).toBeVisible()
+  expect(await screen.findByRole('heading', { name: 'Response map' })).toBeVisible()
+  expect(screen.getByRole('region', { name: /incident at North Ridge/i })).toBeVisible()
 })
 
 test('an older analysis response cannot replace a newer transcript revision', async () => {

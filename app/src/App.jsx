@@ -1,25 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import TranscriptPanel from "./TranscriptPanel.jsx";
+
+const MapPanel = lazy(() => import("./MapPanel.jsx"));
 
 const icons = { confirmed: "✓", uncertain: "~", unknown: "?" };
 const statusOrder = { available: 0, standby: 1, tasked: 2 };
-const teamPositions = {
-  "ridge-1": { x: 45, y: 45, base: "Keswick" },
-  "valley-3": { x: 59, y: 54, base: "York" },
-  "swift-water-2": { x: 48, y: 65, base: "Shrewsbury" },
-  "air-support": { x: 53, y: 47, base: "Leeds" },
-  "forest-4": { x: 32, y: 69, base: "Brecon" },
-  "harbor-5": { x: 73, y: 86, base: "Dover" },
-  "cave-6": { x: 40, y: 78, base: "Mendip" },
-  "urban-7": { x: 57, y: 72, base: "Birmingham" },
-  "summit-8": { x: 40, y: 19, base: "Aviemore" },
-  "trail-9": { x: 47, y: 55, base: "Peak District" },
-  "delta-10": { x: 65, y: 65, base: "The Wash" },
-  "peak-11": { x: 25, y: 50, base: "Eryri" },
-  "night-12": { x: 54, y: 43, base: "Newcastle" },
-  "storm-13": { x: 31, y: 35, base: "Glasgow" },
-  "quarry-14": { x: 62, y: 79, base: "Milton Keynes" },
-};
 const incidentPictureFieldOrder = [
   "incidentType",
   "exactLocation",
@@ -62,8 +47,6 @@ function App() {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [configured, setConfigured] = useState(false);
-  const [transcriptionConfigured, setTranscriptionConfigured] = useState(false);
   const [selected, setSelected] = useState(null);
   const [teamPool, setTeamPool] = useState([]);
   const [expandedTeamId, setExpandedTeamId] = useState(null);
@@ -82,14 +65,6 @@ function App() {
   const responseRef = useRef(null);
 
   useEffect(() => {
-    fetch("/api/health")
-      .then((response) => response.json())
-      .then((health) => {
-        setConfigured(health.aiConfigured);
-        setTranscriptionConfigured(health.transcriptionConfigured);
-      })
-      .catch(() => { });
-
     fetch("/api/teams")
       .then((response) => response.json())
       .then(({ teams = [] }) => setTeamPool(sortRoster(teams)))
@@ -285,32 +260,14 @@ function App() {
   const incidentPictureFields = incidentPictureFieldOrder
     .map((key) => getField(result?.incident?.fields, key))
     .filter(Boolean);
-  const pipelineReady = configured && transcriptionConfigured;
-  const statusText = pipelineReady
-    ? "Voice pipeline connected"
-    : transcriptionConfigured
-      ? "Voice ready · demo analysis"
-      : "Voice setup required";
-
   return (
     <div className="shell">
       <header>
         <div className="brand">
-          <span className="mark">N</span>
+          <span className="mark">R</span>
           <div>
-            <strong>Northstar</strong>
+            <strong>Relai</strong>
             <small>Search & rescue coordination</small>
-          </div>
-        </div>
-        <div className="status">
-          <span className={transcriptionConfigured ? "dot live" : "dot"} />
-          {statusText}
-        </div>
-        <div className="operator">
-          <span>DC</span>
-          <div>
-            <strong>Dispatcher console</strong>
-            <small>Trial environment</small>
           </div>
         </div>
       </header>
@@ -337,13 +294,6 @@ function App() {
                 <span className="step">02</span>
                 <h2>Incident picture</h2>
               </div>
-              {result && (
-                <span className={`badge ${result.incident.mode}`}>
-                  {result.incident.mode === "live"
-                    ? "CLAUDE DRAFT"
-                    : "LOCAL DEMO DRAFT"}
-                </span>
-              )}
             </div>
             {!result ? (
               <Empty
@@ -523,7 +473,17 @@ function App() {
                 </div>
               )}
             </aside>
-            {dispatchSent && <MapPanel teams={rankedTeams} incident={result?.incident} selected={selected} />}
+            {dispatchSent && (
+              <Suspense
+                fallback={
+                  <section className="panel map-panel">
+                    <Empty text="Loading the response map…" compact />
+                  </section>
+                }
+              >
+                <MapPanel teams={rankedTeams} incident={result?.incident} selected={selected} />
+              </Suspense>
+            )}
           </div>
         </section>
       </main>
@@ -537,36 +497,6 @@ function App() {
       </footer>
     </div>
   );
-}
-
-function MapPanel({ teams, incident, selected }) {
-  const location = getField(incident?.fields, "exactLocation")?.value || "Incident location";
-  return <section className="panel map-panel">
-    <div className="panel-head">
-      <div><span className="step">04</span><h2>Live response map</h2></div>
-      <span className="badge live">ALL UNITS</span>
-    </div>
-    <div className="map-canvas" role="img" aria-label={`Map of rescue teams and incident at ${location}`}>
-      <svg className="uk-map" viewBox="0 0 440 620" aria-hidden="true">
-        <path className="uk-land" d="M180 21l31 20 7 34 27 17-14 31 23 31-16 27 29 24-15 36 24 24-10 39 31 22-4 31 35 32-5 38 31 28-16 24 31 31-9 41 25 20-20 29-4 45-33-3-25 25-44-4-30 21-42-5-31 18-39-10-21-31-41-7-6-27 28-27-9-25 27-31-9-35 21-26 2-39 30-35 3-38 28-31-4-31 31-32-7-27 20-30-13-34 17-29-22-32 11-29-18-31 15-34-7-37 22-31-8-28 28-29-7-32 24-26 17-42 29-12 20-31z" />
-        <path className="uk-land island" d="M82 168l21 8 3 25-17 17-20-8-5-23z" />
-        <path className="uk-land island" d="M55 237l15 8-3 22-18 7-10-17z" />
-        <path className="uk-detail" d="M180 250c35 45 48 103 37 159M128 380c47 10 86 8 139-2M181 462c47 6 87 1 127-15" />
-      </svg>
-      <span className="map-label scotland">SCOTLAND</span><span className="map-label england">ENGLAND</span><span className="map-label wales">WALES</span>
-      {teams.map((team, index) => {
-        const position = teamPositions[team.id] || { x: 30 + (index * 9) % 45, y: 20 + (index * 13) % 65, base: team.area };
-        return <button type="button" className={`map-marker team-marker ${team.status} ${selected === team.id ? "selected" : ""}`}
-          style={{ left: `${position.x}%`, top: `${position.y}%` }} title={`${team.name} · ${position.base} · ${team.etaMinutes} min ETA`} key={team.id}>
-          <i /> <span>{team.name}</span>
-        </button>;
-      })}
-      <div className="incident-marker" style={{ left: "43%", top: "42%" }}>
-        <i><span /></i><div><b>INCIDENT</b><strong>{location}</strong></div>
-      </div>
-      <div className="map-legend"><span><i className="incident-dot" /> Incident</span><span><i className="available-dot" /> Available</span><span><i className="standby-dot" /> Standby</span><span><i className="tasked-dot" /> Tasked</span></div>
-    </div>
-  </section>;
 }
 
 function Empty({ text, compact = false }) {

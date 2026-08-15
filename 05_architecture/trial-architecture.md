@@ -36,6 +36,13 @@ This distinction follows Deepgram's [endpointing and interim-results guidance](h
 - Team selection is enabled only for incident-ranked results. Selection is stored by team ID, survives later transcript revisions while that team remains in the result, and resets when a new recording is selected.
 - The browser derives the METHANE dispatch message from the latest structured incident fields. Selecting a team updates only the emergency-services line with its name, ETA, and contact; there is no outbound messaging or dispatch side effect.
 
+## Response map
+
+- The review stage uses Leaflet with CARTO's hosted Dark Matter raster tiles. The browser loads the external basemap directly and retains the CARTO/OpenStreetMap attribution rendered by Leaflet. The raster renderer deliberately avoids a WebGL dependency so the map remains compatible with constrained dispatcher browsers and headless demo environments.
+- Each seeded team owns a stable `{ label, latitude, longitude }` location in the server roster. Those coordinates flow unchanged through `GET /api/teams` and deterministic match results.
+- The prepared North Ridge scenario resolves through a local alias registry to a fixed Lake District coordinate. Arbitrary extracted text is not geocoded; an unknown location is visibly marked as unmapped rather than assigned an invented coordinate.
+- The map supports drag navigation and explicit zoom controls while disabling scroll-wheel zoom. Tile failures leave the surrounding dispatcher view intact and display an unavailable notice.
+
 ## Security and safety choices
 
 - `ANTHROPIC_API_KEY` is server-side environment configuration and is never returned to the browser.

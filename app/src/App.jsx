@@ -32,8 +32,10 @@ function App() {
     </header>
 
     <main>
-      <section className="intro"><div><p className="eyebrow">INCIDENT WORKSPACE · DRAFT</p><h1>Turn the call into a clear response picture.</h1><p>Extract what is known, surface what is missing, and compare the teams equipped to help.</p></div><div className="safety">Decision support only<br/><span>No team is dispatched automatically</span></div></section>
-
+      <section className="workspace-bar">
+        <div><p className="eyebrow">ACTIVE INCIDENT</p><h1>Incident workspace</h1></div>
+        <div className="safety">Decision support only<br/><span>No team is dispatched automatically</span></div>
+      </section>
       <div className="layout">
         <section className="panel transcript-panel">
           <div className="panel-head"><div><span className="step">01</span><h2>Caller transcript</h2></div><span className="badge neutral">SIMULATED CALL</span></div>

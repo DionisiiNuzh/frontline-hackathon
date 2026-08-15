@@ -10,7 +10,7 @@ Test whether a single dispatcher view can reduce the effort needed to turn a cal
 2. While the recording plays, finalized speech is appended to the transcript and automatically analysed.
 3. The assistant extracts a METHANE-style incident record, separates confirmed facts from uncertainty, and suggests the next questions.
 4. The product ranks seeded rescue teams using visible capability and availability rules.
-5. The dispatcher reviews the result and may select a team; the product does not dispatch it.
+5. The dispatcher reviews the result and may select a team, which completes the draft METHANE dispatch message; the product does not dispatch it.
 
 ## In scope
 
@@ -21,6 +21,7 @@ Test whether a single dispatcher view can reduce the effort needed to turn a cal
 - Structured incident fields, confidence labels, gaps, and suggested questions.
 - Explainable, deterministic team suitability ranking.
 - Seeded team roster and a review-only selection action.
+- A selection-aware METHANE message that remains a reviewable draft.
 
 ## Out of scope
 

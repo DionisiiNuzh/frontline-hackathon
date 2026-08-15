@@ -9,6 +9,7 @@ This application is purely an operational tool, not a marketing website. Interfa
 - [x] Implement transcript extraction with safe local fallback.
 - [x] Implement explainable deterministic team matching.
 - [x] Add a dispatcher-focused review interface.
+- [x] Split the incident picture into facts and a METHANE dispatch message.
 - [ ] Validate a live request with the user's Anthropic API key.
 - [ ] Run the prepared scenario with a dispatcher/domain reviewer.
 
@@ -16,7 +17,7 @@ This application is purely an operational tool, not a marketing website. Interfa
 
 ### Scope
 
-Play one fictional incident recording in real time, stream the audio as it plays, show the growing Deepgram transcript, and automatically hand finalized transcript text to the existing Claude analysis endpoint so the incident summary updates. Team matching, suggested-question behaviour, telephony, and outbound messaging are not part of this run.
+Play one fictional incident recording in real time, stream the audio as it plays, show the growing Deepgram transcript, and automatically hand finalized transcript text to the existing Claude analysis endpoint so the incident summary, suggested questions, team ranking, and review-only METHANE message update. Telephony and outbound messaging are not part of this run.
 
 ### User-owned setup
 

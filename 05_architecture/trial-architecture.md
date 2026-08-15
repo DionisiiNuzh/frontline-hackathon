@@ -29,6 +29,13 @@ This distinction follows Deepgram's [endpointing and interim-results guidance](h
 - After each final or interim render, `useLayoutEffect` sets the transcript container to its current `scrollHeight`. Immediate scrolling is deliberate: repeated smooth-scroll animations were restarted by rapid interim updates and could lag behind the newest text.
 - Focused diagnostic logs use `[transcription]` for received/Deepgram events and `[transcript]` for resets, interim updates, cumulative append state, rendered segment counts, and scroll position. Broad request/audio lifecycle logging is intentionally excluded.
 
+## Team review and dispatch draft
+
+- The browser loads the seeded roster from `GET /api/teams`. Before incident analysis, teams are ordered by availability and ETA and are not presented with an incident-fit score.
+- Each completed analysis replaces the roster ordering with the deterministic matches returned by `POST /api/analyse`, including fit scores, supporting reasons, and limitations.
+- Team selection is enabled only for incident-ranked results. Selection is stored by team ID, survives later transcript revisions while that team remains in the result, and resets when a new recording is selected.
+- The browser derives the METHANE dispatch message from the latest structured incident fields. Selecting a team updates only the emergency-services line with its name, ETA, and contact; there is no outbound messaging or dispatch side effect.
+
 ## Security and safety choices
 
 - `ANTHROPIC_API_KEY` is server-side environment configuration and is never returned to the browser.

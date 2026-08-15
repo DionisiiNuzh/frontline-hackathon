@@ -59,7 +59,7 @@ export async function analyseTranscript(transcript) {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
     body: JSON.stringify({
-      model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-20250514', max_tokens: 1400, temperature: 0,
+      model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-5', max_tokens: 1400,
       system: 'You support a search-and-rescue dispatcher. Extract facts conservatively. Never invent a location, casualty condition, hazard, service presence, or capability need. This is decision support, not operational advice.',
       messages: [{ role: 'user', content: `Extract a draft incident record from this caller transcript:\n\n${transcript}` }],
       tools: [extractionTool], tool_choice: { type: 'tool', name: 'record_incident' },

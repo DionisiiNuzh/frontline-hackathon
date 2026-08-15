@@ -4,6 +4,16 @@ const fieldDefinitions = [
   ['casualties', 'Casualties'], ['services', 'Services present'],
 ]
 
+const factSchema = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    value: { type: 'string' },
+    confidence: { type: 'string', enum: ['confirmed', 'uncertain', 'unknown'] },
+  },
+  required: ['value', 'confidence'],
+}
+
 const extractionTool = {
   name: 'record_incident',
   description: 'Return a concise incident record using only caller-supported details.',
@@ -11,19 +21,16 @@ const extractionTool = {
     type: 'object',
     additionalProperties: false,
     properties: {
-      summary: { type: 'string' },
-      fields: {
-        type: 'array', items: { type: 'object', additionalProperties: false,
-          properties: {
-            key: { type: 'string', enum: ['majorIncident', 'exactLocation', 'incidentType', 'hazards', 'access', 'casualties', 'services'] },
-            value: { type: 'string' },
-            confidence: { type: 'string', enum: ['confirmed', 'uncertain', 'unknown'] },
-          }, required: ['key', 'value', 'confidence'] },
+      suggestedQuestions: { type: 'array', maxItems: 3, items: { type: 'string' } },
+      facts: {
+        type: 'object',
+        additionalProperties: false,
+        properties: Object.fromEntries(fieldDefinitions.map(([key]) => [key, factSchema])),
+        required: fieldDefinitions.map(([key]) => key),
       },
       requiredCapabilities: { type: 'array', items: { type: 'string', enum: ['steep-ground', 'rope-rescue', 'medical', 'night-operations', 'search', 'off-road', 'swift-water', 'winch', 'aerial-search'] } },
-      suggestedQuestions: { type: 'array', maxItems: 3, items: { type: 'string' } },
     },
-    required: ['summary', 'fields', 'requiredCapabilities', 'suggestedQuestions'],
+    required: ['suggestedQuestions', 'facts', 'requiredCapabilities'],
   },
 }
 
@@ -51,10 +58,11 @@ export function demoAnalysis(transcript) {
 }
 
 export function normalizeIncident(input) {
-  const incident = { ...input }
+  const { facts = {}, ...incidentInput } = input
+  const incident = { ...incidentInput }
   const receivedFields = new Map((incident.fields || []).map((field) => [field.key, field]))
   incident.fields = fieldDefinitions.map(([key, label]) => {
-    const field = receivedFields.get(key)
+    const field = facts[key] || receivedFields.get(key)
     return {
       key,
       label,
@@ -100,8 +108,8 @@ export async function analyseTranscript(transcript, { signal } = {}) {
     signal,
     headers: { 'content-type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
     body: JSON.stringify({
-      model, max_tokens: 800,
-      system: 'Extract search-and-rescue incident facts conservatively. Never invent a location, casualty condition, hazard, service presence, or capability need. Mark missing facts unknown, keep the summary and questions concise, and prioritize questions that close the most important gaps. Decision support only.',
+      model, max_tokens: 600,
+      system: 'Extract search-and-rescue incident facts conservatively. Never invent a location, casualty condition, hazard, service presence, or capability need. Mark missing facts unknown. Keep fact values and questions concise, and prioritize questions that close the most important gaps. Decision support only.',
       messages: [{ role: 'user', content: transcript }],
       tools: [extractionTool], tool_choice: { type: 'tool', name: 'record_incident' },
     }),

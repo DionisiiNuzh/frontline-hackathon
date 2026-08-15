@@ -4,11 +4,21 @@ import TranscriptPanel from "./TranscriptPanel.jsx";
 const icons = { confirmed: "✓", uncertain: "~", unknown: "?" };
 const statusOrder = { available: 0, standby: 1, tasked: 2 };
 const teamPositions = {
-  "ridge-1": [43, 22], "valley-3": [65, 42], "swift-water-2": [77, 69],
-  "air-support": [52, 48], "forest-4": [22, 47], "harbor-5": [88, 76],
-  "cave-6": [45, 84], "urban-7": [69, 57], "summit-8": [31, 15],
-  "trail-9": [55, 66], "delta-10": [64, 85], "peak-11": [18, 30],
-  "night-12": [61, 29], "storm-13": [36, 55], "quarry-14": [79, 48],
+  "ridge-1": { x: 45, y: 45, base: "Keswick" },
+  "valley-3": { x: 59, y: 54, base: "York" },
+  "swift-water-2": { x: 48, y: 65, base: "Shrewsbury" },
+  "air-support": { x: 53, y: 47, base: "Leeds" },
+  "forest-4": { x: 32, y: 69, base: "Brecon" },
+  "harbor-5": { x: 73, y: 86, base: "Dover" },
+  "cave-6": { x: 40, y: 78, base: "Mendip" },
+  "urban-7": { x: 57, y: 72, base: "Birmingham" },
+  "summit-8": { x: 40, y: 19, base: "Aviemore" },
+  "trail-9": { x: 47, y: 55, base: "Peak District" },
+  "delta-10": { x: 65, y: 65, base: "The Wash" },
+  "peak-11": { x: 25, y: 50, base: "Eryri" },
+  "night-12": { x: 54, y: 43, base: "Newcastle" },
+  "storm-13": { x: 31, y: 35, base: "Glasgow" },
+  "quarry-14": { x: 62, y: 79, base: "Milton Keynes" },
 };
 const incidentPictureFieldOrder = [
   "incidentType",
@@ -306,18 +316,6 @@ function App() {
       </header>
 
       <main>
-        <section className="workspace-bar">
-          <div>
-            <p className="eyebrow">ACTIVE INCIDENT</p>
-            <h1>Incident workspace</h1>
-          </div>
-          <div className="safety">
-            Decision support only
-            <br />
-            <span>No team is dispatched automatically</span>
-          </div>
-        </section>
-
         <div className="primary-layout">
           <TranscriptPanel
             audioName={audioName}
@@ -357,12 +355,13 @@ function App() {
               />
             ) : (
               <div className="picture-stack">
-                <section className="ask-next" aria-label="Ask next">
-                  <div className="ask-next-label"><span>ASK NEXT</span><small>Recommended caller prompt</small></div>
-                  <p>{nextQuestions[0] || "Confirm the caller’s exact location and current condition."}</p>
-                  {nextQuestions.length > 1 && <div className="question-alternates">
-                    {nextQuestions.slice(1).map((question) => <span key={question}>{question}</span>)}
-                  </div>}
+                <section className="ask-next" aria-label="Ask next" key={nextQuestions.join("|")}>
+                  <div className="ask-next-label"><span>ASK NEXT</span><small>Recommended caller prompts</small></div>
+                  <div className="question-grid">
+                    {(nextQuestions.length ? nextQuestions : ["Confirm the caller’s exact location and current condition."]).map((question, index) =>
+                      <div className={`next-question ${index === 0 ? "primary" : "secondary"}`} key={question}><b>{String(index + 1).padStart(2, "0")}</b><p>{question}</p></div>
+                    )}
+                  </div>
                 </section>
                 <section className="picture-block">
                   <div className="facts">
@@ -410,121 +409,121 @@ function App() {
             <span>Dispatch draft sent for review · No team automatically tasked</span>
           </div>
           <div className="response-layout">
-          <aside className="panel teams-panel">
-            <div className="panel-head">
-              <div>
-                <span className="step">03</span>
-                <h2>{hasAnalysis ? "Suitable teams" : "Available teams"}</h2>
+            <aside className="panel teams-panel">
+              <div className="panel-head">
+                <div>
+                  <span className="step">03</span>
+                  <h2>{hasAnalysis ? "Suitable teams" : "Available teams"}</h2>
+                </div>
               </div>
-            </div>
-            {!rankedTeams.length ? (
-              <Empty text="Loading the rescue-team roster…" compact />
-            ) : (
-              <div className="team-list">
-                {visibleTeams.map((team) => {
-                  const reasons = team.reasons ?? [];
-                  const limits = team.limits ?? [];
-                  const isExpanded = expandedTeamId === team.id;
-                  const isSelected = selected === team.id;
+              {!rankedTeams.length ? (
+                <Empty text="Loading the rescue-team roster…" compact />
+              ) : (
+                <div className="team-list">
+                  {visibleTeams.map((team) => {
+                    const reasons = team.reasons ?? [];
+                    const limits = team.limits ?? [];
+                    const isExpanded = expandedTeamId === team.id;
+                    const isSelected = selected === team.id;
 
-                  return (
-                    <article
-                      className={`team ${isSelected ? "selected" : ""} ${isExpanded ? "expanded" : ""}`}
-                      key={team.id}
-                    >
-                      <div className="team-summary">
-                        <div className="team-name-block">
-                          <div>
-                            <div className="team-title-row">
-                              <h3>{team.name}</h3>
-                              <button
-                                type="button"
-                                className="detail-toggle"
-                                aria-label={`${isExpanded ? "Collapse" : "Expand"} details for ${team.name}`}
-                                aria-expanded={isExpanded}
-                                onClick={() =>
-                                  setExpandedTeamId(isExpanded ? null : team.id)
-                                }
-                              >
-                                <span className="detail-toggle-icon" />
-                              </button>
+                    return (
+                      <article
+                        className={`team ${isSelected ? "selected" : ""} ${isExpanded ? "expanded" : ""}`}
+                        key={team.id}
+                      >
+                        <div className="team-summary">
+                          <div className="team-name-block">
+                            <div>
+                              <div className="team-title-row">
+                                <h3>{team.name}</h3>
+                                <button
+                                  type="button"
+                                  className="detail-toggle"
+                                  aria-label={`${isExpanded ? "Collapse" : "Expand"} details for ${team.name}`}
+                                  aria-expanded={isExpanded}
+                                  onClick={() =>
+                                    setExpandedTeamId(isExpanded ? null : team.id)
+                                  }
+                                >
+                                  <span className="detail-toggle-icon" />
+                                </button>
+                              </div>
+                              <p>
+                                {team.area} · {team.people} responders
+                              </p>
                             </div>
-                            <p>
-                              {team.area} · {team.people} responders
-                            </p>
                           </div>
+                          {hasAnalysis && (
+                            <div className="score">
+                              <strong>{team.score}</strong>
+                              <small>FIT</small>
+                            </div>
+                          )}
                         </div>
-                        {hasAnalysis && (
-                          <div className="score">
-                            <strong>{team.score}</strong>
-                            <small>FIT</small>
-                          </div>
-                        )}
-                      </div>
 
-                      <div className="team-status-row">
-                        <span className={`availability ${team.status}`}>
-                          {team.status}
-                        </span>
-                        {hasAnalysis && (
-                          <button
-                            type="button"
-                            className="select-button"
-                            onClick={() => setSelected(team.id)}
-                          >
-                            {isSelected ? "Selected ✓" : "Select team"}
-                          </button>
-                        )}
-                        <strong>ETA: {team.etaMinutes}min</strong>
-                      </div>
-
-                      <div className={`team-details ${isExpanded ? "expanded" : ""}`}>
-                        {hasAnalysis && (
-                          <div className="reason-list">
-                            {reasons.slice(0, 3).map((reason) => (
-                              <p key={reason}>
-                                <span>✓</span>
-                                {reason}
-                              </p>
-                            ))}
-                            {limits.slice(0, 2).map((limit) => (
-                              <p className="limit" key={limit}>
-                                <span>!</span>
-                                {limit}
-                              </p>
-                            ))}
-                          </div>
-                        )}
-                        <div className="equipment">
-                          {(team.equipment || []).map((item) => (
-                            <span key={item}>{item}</span>
-                          ))}
+                        <div className="team-status-row">
+                          <span className={`availability ${team.status}`}>
+                            {team.status}
+                          </span>
+                          {hasAnalysis && (
+                            <button
+                              type="button"
+                              className="select-button"
+                              onClick={() => setSelected(team.id)}
+                            >
+                              {isSelected ? "Selected ✓" : "Select team"}
+                            </button>
+                          )}
+                          <strong>ETA: {team.etaMinutes}min</strong>
                         </div>
-                        {team.notes && <p className="team-notes">{team.notes}</p>}
-                      </div>
-                    </article>
-                  );
-                })}
 
-                {hasMoreTeams && (
-                  <button
-                    type="button"
-                    className="view-all-btn"
-                    onClick={() => setShowAllTeams((current) => !current)}
-                  >
-                    {showAllTeams ? "Show top 5" : "View all teams"}
-                  </button>
-                )}
-              </div>
-            )}
-            {selected && (
-              <div className="selection-note">
-                Selection recorded in this screen only. Confirm through your
-                organisation’s normal dispatch process.
-              </div>
-            )}
-          </aside>
-          {dispatchSent && <MapPanel teams={rankedTeams} incident={result?.incident} selected={selected} />}
+                        <div className={`team-details ${isExpanded ? "expanded" : ""}`}>
+                          {hasAnalysis && (
+                            <div className="reason-list">
+                              {reasons.slice(0, 3).map((reason) => (
+                                <p key={reason}>
+                                  <span>✓</span>
+                                  {reason}
+                                </p>
+                              ))}
+                              {limits.slice(0, 2).map((limit) => (
+                                <p className="limit" key={limit}>
+                                  <span>!</span>
+                                  {limit}
+                                </p>
+                              ))}
+                            </div>
+                          )}
+                          <div className="equipment">
+                            {(team.equipment || []).map((item) => (
+                              <span key={item}>{item}</span>
+                            ))}
+                          </div>
+                          {team.notes && <p className="team-notes">{team.notes}</p>}
+                        </div>
+                      </article>
+                    );
+                  })}
+
+                  {hasMoreTeams && (
+                    <button
+                      type="button"
+                      className="view-all-btn"
+                      onClick={() => setShowAllTeams((current) => !current)}
+                    >
+                      {showAllTeams ? "Show top 5" : "View all teams"}
+                    </button>
+                  )}
+                </div>
+              )}
+              {selected && (
+                <div className="selection-note">
+                  Selection recorded in this screen only. Confirm through your
+                  organisation’s normal dispatch process.
+                </div>
+              )}
+            </aside>
+            {dispatchSent && <MapPanel teams={rankedTeams} incident={result?.incident} selected={selected} />}
           </div>
         </section>
       </main>
@@ -548,22 +547,21 @@ function MapPanel({ teams, incident, selected }) {
       <span className="badge live">ALL UNITS</span>
     </div>
     <div className="map-canvas" role="img" aria-label={`Map of rescue teams and incident at ${location}`}>
-      <svg className="terrain" viewBox="0 0 800 520" preserveAspectRatio="none" aria-hidden="true">
-        <path d="M-20 355 C120 260 180 430 320 310 S550 205 820 320" />
-        <path d="M-10 120 C180 30 260 210 410 105 S650 30 840 125" />
-        <path d="M190 -20 C130 150 260 215 190 555" />
-        <path d="M590 -20 C530 155 690 260 620 555" />
+      <svg className="uk-map" viewBox="0 0 440 620" aria-hidden="true">
+        <path className="uk-land" d="M180 21l31 20 7 34 27 17-14 31 23 31-16 27 29 24-15 36 24 24-10 39 31 22-4 31 35 32-5 38 31 28-16 24 31 31-9 41 25 20-20 29-4 45-33-3-25 25-44-4-30 21-42-5-31 18-39-10-21-31-41-7-6-27 28-27-9-25 27-31-9-35 21-26 2-39 30-35 3-38 28-31-4-31 31-32-7-27 20-30-13-34 17-29-22-32 11-29-18-31 15-34-7-37 22-31-8-28 28-29-7-32 24-26 17-42 29-12 20-31z" />
+        <path className="uk-land island" d="M82 168l21 8 3 25-17 17-20-8-5-23z" />
+        <path className="uk-land island" d="M55 237l15 8-3 22-18 7-10-17z" />
+        <path className="uk-detail" d="M180 250c35 45 48 103 37 159M128 380c47 10 86 8 139-2M181 462c47 6 87 1 127-15" />
       </svg>
-      <span className="map-label north">NORTH RIDGE</span><span className="map-label valley">EAST VALLEY</span>
-      <span className="map-label forest">WEST FOREST</span><span className="map-label coast">COASTAL BELT</span>
+      <span className="map-label scotland">SCOTLAND</span><span className="map-label england">ENGLAND</span><span className="map-label wales">WALES</span>
       {teams.map((team, index) => {
-        const [x, y] = teamPositions[team.id] || [20 + (index * 13) % 65, 18 + (index * 19) % 68];
+        const position = teamPositions[team.id] || { x: 30 + (index * 9) % 45, y: 20 + (index * 13) % 65, base: team.area };
         return <button type="button" className={`map-marker team-marker ${team.status} ${selected === team.id ? "selected" : ""}`}
-          style={{ left: `${x}%`, top: `${y}%` }} title={`${team.name} · ${team.etaMinutes} min ETA`} key={team.id}>
+          style={{ left: `${position.x}%`, top: `${position.y}%` }} title={`${team.name} · ${position.base} · ${team.etaMinutes} min ETA`} key={team.id}>
           <i /> <span>{team.name}</span>
         </button>;
       })}
-      <div className="incident-marker" style={{ left: "46%", top: "28%" }}>
+      <div className="incident-marker" style={{ left: "43%", top: "42%" }}>
         <i><span /></i><div><b>INCIDENT</b><strong>{location}</strong></div>
       </div>
       <div className="map-legend"><span><i className="incident-dot" /> Incident</span><span><i className="available-dot" /> Available</span><span><i className="standby-dot" /> Standby</span><span><i className="tasked-dot" /> Tasked</span></div>

@@ -6,9 +6,9 @@
 - Express API in the same `app/` project.
 - The browser plays a user-selected recording and sends small `MediaRecorder` chunks over `/api/transcribe` while playback advances.
 - The Express server bridges those chunks to Deepgram's live WebSocket API, keeping the Deepgram credential server-side. Interim text is display-only; each stable Deepgram segment extends the finalized transcript as soon as `is_final` is true.
-- Each finalized segment triggers the existing analysis endpoint with the cumulative finalized transcript. Transcript revisions prevent late responses from replacing newer incident results.
-- `POST /api/analyse` calls Anthropic's Messages API from the server only.
-- A constrained tool schema captures structured output. When no key is configured, a clearly labelled local scenario parser supplies a demo result.
+- Each finalized segment triggers the existing analysis endpoint with the cumulative finalized transcript. Transcript revisions prevent late responses from replacing newer incident results, and a newer revision aborts the superseded browser request. The server propagates a client disconnect to the upstream Anthropic request.
+- `POST /api/analyse` calls Anthropic's Messages API from the server only. The latency-sensitive extraction defaults to Claude Haiku 4.5 and records model latency and output-token count without logging transcript content.
+- A compact constrained tool schema returns three next questions, seven fixed fact slots with confidence, and required capabilities. The server owns canonical field labels, fills omitted values as unknown, derives the one-sentence summary and uncertainty list, and then runs deterministic team matching. This reduces model output on the update path without removing UI or matching data. When no key is configured, a clearly labelled local scenario parser supplies a demo result.
 - Team matching is deterministic application code, not model output.
 
 ## Streaming transcript event model
@@ -46,6 +46,6 @@ This distinction follows Deepgram's [endpointing and interim-results guidance](h
 ## Configuration
 
 - `ANTHROPIC_API_KEY`: optional for fallback demo, required for live AI analysis.
-- `ANTHROPIC_MODEL`: optional model override.
+- `ANTHROPIC_MODEL`: optional model override; defaults to `claude-haiku-4-5-20251001` for the latency-sensitive extraction path.
 - `DEEPGRAM_API_KEY`: required for the minimal voice run.
 - `PORT`: optional Express port; defaults to 3001.

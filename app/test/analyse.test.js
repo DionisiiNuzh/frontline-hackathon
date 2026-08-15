@@ -20,10 +20,9 @@ test('derives a summary when the model omits it', () => {
 
 test('normalizes a compact model result into every incident field', () => {
   const incident = normalizeIncident({
-    summary: 'Caller reports a fall.',
-    fields: [
-      { key: 'incidentType', value: 'Fall from a ledge', confidence: 'confirmed' },
-    ],
+    facts: {
+      incidentType: { value: 'Fall from a ledge', confidence: 'confirmed' },
+    },
     suggestedQuestions: ['Where exactly are you?', 'Is anyone injured?', 'Are there hazards?', 'Who is on scene?'],
   })
 
@@ -42,4 +41,5 @@ test('normalizes a compact model result into every incident field', () => {
   })
   assert.equal(incident.suggestedQuestions.length, 3)
   assert.ok(incident.uncertainties.includes('Exact location has not been established'))
+  assert.equal(incident.summary, 'Fall from a ledge.')
 })

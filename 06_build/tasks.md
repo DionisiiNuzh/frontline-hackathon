@@ -60,4 +60,6 @@ Play one fictional incident recording in real time, stream the audio as it plays
 - [x] Add a UI regression test proving that three final events leave three visible transcript rows.
 - [x] Add focused browser/server transcript event diagnostics without credentials or broad application logging.
 - [x] Run the full server/UI test suite and production build after the transcript fix.
+- [x] Shorten live incident updates by moving the extraction path to Claude Haiku 4.5, reducing its output contract, normalizing the complete incident shape server-side, and cancelling superseded analysis requests.
+- [x] Benchmark the same fictional incident payload before and after the latency change: approximately 6.0 seconds on the prior Sonnet path and 2.7 seconds on the optimized path in representative live calls.
 - [ ] User-run verification: play `trial1_q1.m4a` through the application and confirm its three finalized segments remain visible and trigger cumulative summary revisions.

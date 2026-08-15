@@ -35,8 +35,6 @@ If the task concerns:
 * demo or judging → `07_demo/CONTEXT.md`
 * current progress or resuming work → `_state/CURRENT.md`
 
-For workspace-wide routing, read `CONTEXT.md`.
-
 ## Rules
 
 * One folder, one job.

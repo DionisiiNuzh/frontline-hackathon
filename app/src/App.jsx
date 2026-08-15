@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-
-const sample = `Caller: We're on North Ridge, close to the old quarry path. My friend slipped from a ledge and landed below me. I can see him and he's talking, but he says his leg is badly hurt and he can't stand. The slope is very steep and there are loose rocks. It will be dark in about an hour. We came up from the east car park, but I don't know the grid reference. No other services are here.`
+import TranscriptPanel from './TranscriptPanel.jsx'
 
 const icons = { confirmed: '✓', uncertain: '~', unknown: '?' }
 
 function App() {
-  const [transcript, setTranscript] = useState(sample)
+  const [transcript, setTranscript] = useState('')
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -59,6 +58,7 @@ function App() {
     setInterim('')
     setResult(null)
     setError('')
+    console.info('[transcript] cleared', { reason: 'new audio selected', file: file.name })
   }
 
   function startCall() {
@@ -79,12 +79,14 @@ function App() {
     setResult(null)
     setSelected(null)
     audio.currentTime = 0
+    console.info('[transcript] cleared', { reason: 'call started' })
 
     const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:'
     const socket = new WebSocket(`${protocol}//${location.host}/api/transcribe`)
     socketRef.current = socket
     socket.onmessage = async ({ data }) => {
       const event = JSON.parse(data)
+      console.log('[transcription] browser event', event)
       if (event.type === 'ready') {
         try {
           const stream = capture.call(audio)
@@ -106,10 +108,24 @@ function App() {
           socket.close()
         }
       }
-      if (event.type === 'interim') setInterim(event.isFinal ? '' : event.text)
-      if (event.type === 'utterance') {
-        const next = [transcriptRef.current, event.text].filter(Boolean).join('\n')
+      if (event.type === 'interim') {
+        const nextInterim = event.isFinal ? '' : event.text
+        console.log('[transcript] interim update', {
+          isFinal: event.isFinal,
+          text: nextInterim,
+        })
+        setInterim(nextInterim)
+      }
+      if (event.type === 'final') {
+        const previous = transcriptRef.current
+        const next = [previous, event.text].filter(Boolean).join('\n')
         transcriptRef.current = next
+        console.info('[transcript] finalized segment appended', {
+          received: event.text,
+          previous,
+          next,
+          segmentCount: next.split('\n').length,
+        })
         setTranscript(next)
         setInterim('')
         const revision = ++revisionRef.current
@@ -146,20 +162,18 @@ function App() {
         <div className="safety">Decision support only<br/><span>No team is dispatched automatically</span></div>
       </section>
       <div className="layout">
-        <section className="panel transcript-panel">
-          <div className="panel-head"><div><span className="step">01</span><h2>Live call transcript</h2></div><span className="badge neutral">{callStatus.toUpperCase()}</span></div>
-          <div className="audio-source">
-            <input id="audio-file" type="file" accept="audio/*" onChange={chooseAudio} />
-            <label htmlFor="audio-file">{audioName || 'Choose incident recording'}</label>
-            <audio ref={audioRef} src={audioUrl} onEnded={finishCall} />
-          </div>
-          <div className="live-transcript" aria-live="polite">
-            {transcript ? <p>{transcript}</p> : <span>Finalized speech will appear here while the recording plays.</span>}
-            {interim && <em>{interim}</em>}
-          </div>
-          <div className="transcript-foot"><span>{transcript.length} characters · transcript is not stored</span>{callStatus === 'playing' ? <button onClick={finishCall}>Stop call</button> : <button onClick={startCall} disabled={!audioUrl || callStatus === 'connecting' || callStatus === 'finishing'}>{callStatus === 'connecting' ? 'Connecting…' : 'Start call →'}</button>}</div>
-          {error && <div className="error">{error}</div>}
-        </section>
+        <TranscriptPanel
+          audioName={audioName}
+          audioRef={audioRef}
+          audioUrl={audioUrl}
+          callStatus={callStatus}
+          error={error}
+          interim={interim}
+          onChooseAudio={chooseAudio}
+          onFinishCall={finishCall}
+          onStartCall={startCall}
+          transcript={transcript}
+        />
 
         <section className="panel picture-panel">
           <div className="panel-head"><div><span className="step">02</span><h2>Incident picture</h2></div>{result && <span className={`badge ${result.incident.mode}`}>{result.incident.mode === 'live' ? 'CLAUDE DRAFT' : 'LOCAL DEMO DRAFT'}</span>}</div>

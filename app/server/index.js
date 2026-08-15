@@ -63,34 +63,37 @@ transcriptionServer.on('connection', (browser) => {
   const deepgram = new WebSocket(`wss://api.deepgram.com/v1/listen?${query}`, {
     headers: { Authorization: `Token ${apiKey}` },
   })
-  let utteranceParts = []
-
   const send = (message) => {
     if (browser.readyState === WebSocket.OPEN) browser.send(JSON.stringify(message))
   }
-  const emitUtterance = () => {
-    const text = utteranceParts.join(' ').replace(/\s+/g, ' ').trim()
-    utteranceParts = []
-    if (text) send({ type: 'utterance', text })
-  }
 
-  deepgram.on('open', () => send({ type: 'ready' }))
+  deepgram.on('open', () => {
+    console.info('[transcription] Deepgram connected')
+    send({ type: 'ready' })
+  })
   deepgram.on('message', (data) => {
     const event = JSON.parse(data.toString())
     if (event.type === 'UtteranceEnd') {
-      emitUtterance()
+      console.debug('[transcription] Deepgram utterance end', {
+        channel: event.channel,
+        lastWordEnd: event.last_word_end,
+      })
       return
     }
     const alternative = event.channel?.alternatives?.[0]
     const text = alternative?.transcript?.trim()
     if (!text) return
-    if (event.is_final) utteranceParts.push(text)
+    console.debug('[transcription] Deepgram result', {
+      text,
+      isFinal: Boolean(event.is_final),
+      speechFinal: Boolean(event.speech_final),
+    })
     send({ type: 'interim', text, isFinal: Boolean(event.is_final) })
-    if (event.speech_final) emitUtterance()
+    if (event.is_final) send({ type: 'final', text })
   })
   deepgram.on('error', (error) => send({ type: 'error', message: error.message || 'Transcription failed.' }))
   deepgram.on('close', (code) => {
-    emitUtterance()
+    console.info('[transcription] Deepgram closed', { code })
     send({ type: 'closed', code })
   })
 

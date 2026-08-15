@@ -51,6 +51,18 @@ export function demoAnalysis(transcript) {
   }
 }
 
+export function normalizeIncident(input) {
+  const incident = { ...input }
+  if (typeof incident.summary === 'string' && incident.summary.trim()) return incident
+
+  const fields = new Map((incident.fields || []).map((field) => [field.key, field.value]))
+  const parts = [fields.get('incidentType'), fields.get('casualties')].filter(Boolean)
+  const location = fields.get('exactLocation')
+  incident.summary = parts.length ? `${parts.join('. ')}.` : 'Incident details are still being established.'
+  if (location) incident.summary += ` Location: ${location}.`
+  return incident
+}
+
 export async function analyseTranscript(transcript) {
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) return { ...demoAnalysis(transcript), mode: 'demo' }
@@ -59,8 +71,8 @@ export async function analyseTranscript(transcript) {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
     body: JSON.stringify({
-      model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-5', max_tokens: 1400,
-      system: 'You support a search-and-rescue dispatcher. Extract facts conservatively. Never invent a location, casualty condition, hazard, service presence, or capability need. This is decision support, not operational advice.',
+      model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-5', max_tokens: 1800,
+      system: 'You support a search-and-rescue dispatcher. Extract facts conservatively. Never invent a location, casualty condition, hazard, service presence, or capability need. Always include the required one-sentence summary. Keep suggested questions concise. This is decision support, not operational advice.',
       messages: [{ role: 'user', content: `Extract a draft incident record from this caller transcript:\n\n${transcript}` }],
       tools: [extractionTool], tool_choice: { type: 'tool', name: 'record_incident' },
     }),
@@ -69,5 +81,5 @@ export async function analyseTranscript(transcript) {
   if (!response.ok) throw new Error(body?.error?.message || `Anthropic request failed (${response.status})`)
   const toolUse = body.content?.find((block) => block.type === 'tool_use' && block.name === 'record_incident')
   if (!toolUse?.input) throw new Error('Claude did not return a structured incident record')
-  return { ...toolUse.input, mode: 'live', model: body.model }
+  return { ...normalizeIncident(toolUse.input), mode: 'live', model: body.model }
 }

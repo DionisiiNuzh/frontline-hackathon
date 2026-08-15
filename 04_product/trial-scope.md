@@ -6,14 +6,17 @@ Test whether a single dispatcher view can reduce the effort needed to turn a cal
 
 ## Trial flow
 
-1. A dispatcher pastes or edits a simulated call transcript.
-2. The assistant extracts a METHANE-style incident record, separates confirmed facts from uncertainty, and suggests the next questions.
-3. The product ranks seeded rescue teams using visible capability and availability rules.
-4. The dispatcher reviews the result and may select a team; the product does not dispatch it.
+1. For the minimal voice run, a dispatcher selects and plays a fictional incident recording; otherwise a dispatcher may paste or edit a simulated call transcript.
+2. While the recording plays, finalized speech is appended to the transcript and automatically analysed.
+3. The assistant extracts a METHANE-style incident record, separates confirmed facts from uncertainty, and suggests the next questions.
+4. The product ranks seeded rescue teams using visible capability and availability rules.
+5. The dispatcher reviews the result and may select a team; the product does not dispatch it.
 
 ## In scope
 
 - Transcript analysis with Anthropic when configured.
+- Real-time playback streaming of one user-selected fictional recording through Deepgram, with interim and finalized transcript display.
+- Automatic incident refresh from finalized transcript utterances.
 - Local demonstration fallback when no API key is configured.
 - Structured incident fields, confidence labels, gaps, and suggested questions.
 - Explainable, deterministic team suitability ranking.
@@ -21,7 +24,7 @@ Test whether a single dispatcher view can reduce the effort needed to turn a cal
 
 ## Out of scope
 
-- Live audio, telephony, maps, authentication, persistence, team tracking, and real dispatch.
+- Microphone capture, telephony, maps, authentication, persistence, team tracking, and real dispatch.
 - Medical or operational advice.
 
 ## Trial success criteria
